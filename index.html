@@ -1,144 +1,390 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Happy Birthday!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;900&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #ff4757;
+            --secondary: #2ed573;
+            --bg: #0f0f0f;
+        }
+
         body {
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+            background-color: var(--bg);
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
             height: 100vh;
+            width: 100vw;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* --- 1. THE SMASH GAME LAYER --- */
+        #game-layer {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at center, #2c2c2c 0%, #000000 100%);
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            font-family: 'Arial', sans-serif;
+            z-index: 200;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s ease;
+        }
+
+        .instruction {
+            margin-top: 30px;
+            font-size: 1.2rem;
+            color: #888;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            animation: pulse 1s infinite alternate;
+        }
+
+        /* The Box Itself */
+        .gift-container {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .gift-box {
+            font-size: 8rem;
+            filter: drop-shadow(0 0 20px rgba(255, 71, 87, 0.3));
+            transition: all 0.1s;
+        }
+
+        /* Health Bar */
+        .health-bar-container {
+            width: 200px;
+            height: 10px;
+            background: #333;
+            border-radius: 20px;
+            margin-top: 40px;
             overflow: hidden;
+            border: 2px solid #555;
+        }
+
+        .health-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #ff4757, #ff6b81);
+            transition: width 0.1s linear;
+        }
+
+        /* Click Effects */
+        .shake-mild { animation: shake 0.5s; }
+        .shake-hard { animation: shakeHard 0.5s infinite; color: #ff6b6b; filter: brightness(1.5) drop-shadow(0 0 30px red); }
+        
+        .click-particle {
+            position: absolute;
+            pointer-events: none;
+            font-weight: 900;
+            color: white;
+            font-size: 1.5rem;
+            animation: floatUp 1s forwards;
+        }
+
+        /* --- 2. THE MAIN SLIDESHOW LAYER (Hidden initially) --- */
+        #main-app {
+            display: none;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        #dynamic-bg {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            filter: blur(30px) brightness(0.5);
+            transition: background-image 1s ease-in-out;
+            z-index: 0;
+        }
+
+        /* Photo Card */
+        .card-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -55%);
+            width: 85%;
+            max-width: 400px;
+            height: 55vh;
+            z-index: 10;
+        }
+
+        .photo-card {
+            width: 100%;
+            height: 100%;
+            background-size: contain; 
+            background-repeat: no-repeat;
+            background-position: center;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            transition: background-image 0.8s ease-in-out;
+        }
+
+        /* Glass Text Box */
+        .glass-box {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 85%;
+            background: rgba(20, 20, 20, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            border-radius: 20px;
+            z-index: 20;
             text-align: center;
         }
 
-        .container {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            z-index: 10;
-            max-width: 80%;
+        .h-title {
+            font-family: 'Dancing Script', cursive;
+            font-size: 2.2rem;
+            background: linear-gradient(to right, #ff9a9e, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
         }
 
-        h1 {
-            color: #ff6b6b;
-            font-size: 3em;
-            margin-bottom: 10px;
+        .typewriter-text {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #f1f1f1;
+            white-space: pre-wrap;
+            min-height: 50px;
         }
 
-        p {
-            font-size: 1.2em;
-            color: #555;
-            margin-bottom: 30px;
+        /* --- ANIMATIONS --- */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            25% { transform: translate(-3px, 0px) rotate(5deg); }
+            50% { transform: translate(3px, -2px) rotate(-5deg); }
+            75% { transform: translate(-3px, 2px) rotate(5deg); }
+            100% { transform: translate(1px, -1px) rotate(0deg); }
         }
 
-        .btn {
-            background-color: #ff6b6b;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 1.2em;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: transform 0.2s;
+        @keyframes shakeHard {
+            0% { transform: translate(5px, 5px) rotate(0deg) scale(1.1); }
+            25% { transform: translate(-5px, -5px) rotate(-10deg) scale(1.1); }
+            50% { transform: translate(5px, -5px) rotate(10deg) scale(1.1); }
+            75% { transform: translate(-5px, 5px) rotate(-10deg) scale(1.1); }
+            100% { transform: translate(1px, -1px) rotate(0deg) scale(1.1); }
         }
 
-        .btn:hover {
-            transform: scale(1.1);
-            background-color: #ff4757;
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
         }
 
-        /* Hidden Surprise Message */
-        #surprise {
-            display: none;
-            margin-top: 20px;
-            font-size: 1.5em;
-            color: #2ed573;
-            animation: popIn 0.5s ease;
+        @keyframes explode {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(20); opacity: 0; }
         }
 
-        @keyframes popIn {
-            0% { transform: scale(0); }
-            80% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
+        @keyframes pulse { 0% { opacity: 0.6; } 100% { opacity: 1; } }
 
-        /* Confetti Canvas */
-        #confetti {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 5;
-        }
     </style>
 </head>
 <body>
 
-    <canvas id="confetti"></canvas>
+    <audio id="bgMusic" loop>
+        <source src="song.mp3" type="audio/mpeg">
+    </audio>
 
-    <div class="container">
-        <h1>Happy Birthday! 🎉</h1>
-        <p>I have a special surprise for you...</p>
-        <button class="btn" onclick="celebrate()">Click Me!</button>
-        <div id="surprise">
-            🎂 Wishing you the best day ever! <br>
-            <small>(You are awesome!)</small>
+    <div id="game-layer" onclick="handleTap(event)">
+        <div class="gift-container">
+            <div class="gift-box" id="box-icon">🎁</div>
+        </div>
+        
+        <div class="health-bar-container">
+            <div class="health-bar-fill" id="health-fill"></div>
+        </div>
+        
+        <div class="instruction" id="instruction-text">Tap to Unwrap!</div>
+    </div>
+
+    <div id="main-app">
+        <div id="dynamic-bg"></div>
+        
+        <div class="card-container">
+            <div class="photo-card" id="currentPhoto"></div>
+        </div>
+
+        <div class="glass-box">
+            <div class="h-title">Happy Birthday Katthe!</div>
+            <div class="typewriter-text" id="messageArea"></div>
         </div>
     </div>
 
+    <canvas id="confetti" style="position:fixed; top:0; left:0; pointer-events:none; z-index:999;"></canvas>
+
     <script>
-        // Simple confetti logic
-        const canvas = document.getElementById('confetti');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        // --- CONFIGURATION ---
+        const photos = [
+            'photos/photo1.jpg',
+            'photos/photo2.jpg',
+            'photos/photo3.jpg',
+            'photos/photo4.jpg',
+            'photos/photo5.jpg',
+            'photos/photo6.png',
+            'photos/photo7.jpg',
+            'photos/photo8.png',
+            'photos/photo9.png',
+            'photos/photo10.png'
+        ];
 
-        let particles = [];
-        const colors = ['#ff6b6b', '#ffa502', '#2ed573', '#1e90ff', '#ff4757'];
+        const messageText = "Hey! \n I really wanted to do something different for you. \nYou are such an incredible person and you deserve the best. \n\nCheers to another year of being awesome! 🥂\n Love Love💖💖🧿⭐";
+        
+        // Game Settings
+        let clicks = 0;
+        const requiredClicks = 20; // How many taps to open
+        let isOpened = false;
 
-        function celebrate() {
-            document.querySelector('.btn').style.display = 'none';
-            document.querySelector('p').style.display = 'none';
-            document.getElementById('surprise').style.display = 'block';
+        // --- GAME LOGIC ---
+        function handleTap(e) {
+            if (isOpened) return;
+
+            clicks++;
+            const box = document.getElementById('box-icon');
+            const fill = document.getElementById('health-fill');
+            const text = document.getElementById('instruction-text');
+            const music = document.getElementById('bgMusic');
+
+            // 1. Play Music on First Tap (Browser Policy)
+            if (clicks === 1) {
+                music.volume = 0.5;
+                music.play().catch(console.error);
+            }
+
+            // 2. Update Health Bar
+            const percentage = 100 - ((clicks / requiredClicks) * 100);
+            fill.style.width = percentage + '%';
+
+            // 3. Visual Feedback (Hit Particles)
+            createParticle(e.clientX, e.clientY);
+
+            // 4. Intensity Levels
+            if (clicks < 10) {
+                box.classList.remove('shake-mild');
+                void box.offsetWidth; // Trigger reflow to restart animation
+                box.classList.add('shake-mild');
+            } else if (clicks < requiredClicks) {
+                box.innerText = "🔥"; // Change icon to fire or angry box
+                box.classList.add('shake-hard');
+                text.innerText = "ALMOST THERE!";
+                text.style.color = "#ff4757";
+            } else {
+                // 5. SUCCESS - OPEN THE BOX
+                openGift();
+            }
+        }
+
+        function createParticle(x, y) {
+            const p = document.createElement('div');
+            p.classList.add('click-particle');
+            const messages = ["POW!", "BAM!", "HIT!", "TAP!"];
+            p.innerText = messages[Math.floor(Math.random() * messages.length)];
+            p.style.left = x + 'px';
+            p.style.top = y + 'px';
+            document.body.appendChild(p);
+            setTimeout(() => p.remove(), 1000);
+        }
+
+        function openGift() {
+            isOpened = true;
+            const layer = document.getElementById('game-layer');
             
-            // Create confetti
-            for(let i=0; i<300; i++) {
+            // Explosion Effect
+            layer.style.transform = "scale(2)";
+            layer.style.opacity = "0";
+            
+            // Fire Confetti
+            fireConfetti();
+
+            // Switch Screens
+            setTimeout(() => {
+                layer.style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('main-app').style.opacity = '1';
+                    startSlideshow();
+                    typeWriter();
+                }, 100);
+            }, 500);
+        }
+
+        // --- SLIDESHOW LOGIC ---
+        let currentIndex = 0;
+        let charIndex = 0;
+
+        function startSlideshow() {
+            updatePhotos();
+            setInterval(() => {
+                currentIndex = (currentIndex + 1) % photos.length;
+                updatePhotos();
+            }, 4000);
+        }
+
+        function updatePhotos() {
+            const url = `url('${photos[currentIndex]}')`;
+            document.getElementById('dynamic-bg').style.backgroundImage = url;
+            document.getElementById('currentPhoto').style.backgroundImage = url;
+        }
+
+        function typeWriter() {
+            if (charIndex < messageText.length) {
+                document.getElementById('messageArea').innerText += messageText.charAt(charIndex);
+                charIndex++;
+                setTimeout(typeWriter, 50);
+            }
+        }
+
+        // --- SIMPLE CONFETTI ---
+        function fireConfetti() {
+            const canvas = document.getElementById('confetti');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            let particles = [];
+            for(let i=0; i<200; i++) {
                 particles.push({
                     x: window.innerWidth / 2,
                     y: window.innerHeight / 2,
-                    color: colors[Math.floor(Math.random() * colors.length)],
-                    speedX: (Math.random() - 0.5) * 15,
-                    speedY: (Math.random() - 0.5) * 15,
-                    size: Math.random() * 8 + 2
+                    vx: (Math.random() - 0.5) * 20,
+                    vy: (Math.random() - 0.5) * 20,
+                    color: `hsl(${Math.random()*360}, 100%, 50%)`
                 });
             }
-            requestAnimationFrame(render);
-        }
 
-        function render() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach((p, index) => {
-                p.x += p.speedX;
-                p.y += p.speedY;
-                p.speedY += 0.1; // gravity
-                p.size *= 0.98; // shrink
-                
-                ctx.fillStyle = p.color;
-                ctx.fillRect(p.x, p.y, p.size, p.size);
-
-                if(p.size < 0.5) particles.splice(index, 1);
-            });
-            if(particles.length > 0) requestAnimationFrame(render);
+            function draw() {
+                ctx.clearRect(0,0,canvas.width, canvas.height);
+                particles.forEach((p, i) => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.2; // Gravity
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(p.x, p.y, 5, 5);
+                });
+                if(particles.some(p => p.y < canvas.height)) requestAnimationFrame(draw);
+            }
+            draw();
         }
     </script>
 </body>
